@@ -7,7 +7,7 @@ import publickKeyObject from '../config/clave'
  */import { UserUseCase } from "../../application/userUseCase"
 import { IUser } from "../model/user"
 import fs from 'fs';
-const publicityKey = fs.readFileSync('jwtRS256.key');
+const privateKey = fs.readFileSync('jwtRS256.key');
 /* const JWT_SECRET = fs.readFileSync('../config/clave', 'utf8'); */
 
 interface TokenData {
@@ -20,7 +20,7 @@ const signOptions: SignOptions = {
     algorithm: "RS256" 
   };
 function createToken(user: IUser){ 
-        const signedToken = jwt.sign({id:user.id, email: user.email},publicityKey,signOptions)
+        const signedToken = jwt.sign({id:user.id, email: user.email},privateKey,signOptions)
          const obj:TokenData = { 
             expiresIn:"10m",
             token:signedToken
@@ -28,9 +28,9 @@ function createToken(user: IUser){
         return obj;
 }
 function refreshToken(user: IUser){ 
-        const refreshToken  = jwt.sign({id:user.id, email: user.email},publicityKey,signOptions)
+        const refreshToken = jwt.sign({id:user.id, email: user.email},privateKey,signOptions)
          const obj:TokenData = { 
-            expiresIn:"10m",
+            expiresIn:"1d",
             token:refreshToken 
         }
         return obj;
@@ -97,6 +97,7 @@ export class UserController{
         }
 
         const tokenObject = createToken(user);
+        const tokenRefresh = refreshToken(user);
         let oldTokens = user.tokens || [];
            if (oldTokens.length) {
              oldTokens = oldTokens.filter((tim: any) => {
@@ -108,16 +109,18 @@ export class UserController{
            }
         await this.userUseCase.updateToken(true,user._id,oldTokens,tokenObject);
         return res
-        .cookie('refreshToken', refreshToken, { httpOnly: true, sameSite: 'strict' })
+        .cookie('refreshToken', tokenRefresh, { httpOnly: true, sameSite: 'strict' })
         .header('Authorization', tokenObject.token)
         .status(200).json({token:tokenObject.token,status:true,expireTime:tokenObject.expiresIn,user:newUser})
     } 
    public isAuth = async (req:Request, res:Response, next:NextFunction) => {
         if (req.headers && req.headers.authorization) {
           const token = req.headers.authorization.split(' ')[1];
-          console.log(req)
-          /* try {
-            const decode:any = jwt.verify(token, publicityKey,signOptions);
+          const refreshToken:any = req.headers.cookie?.split("=");
+       /*    console.log(req.headers) */
+          
+          try {
+            const decode:any = jwt.verify(token, privateKey,signOptions);
             const user = await this.userUseCase.getUserId(decode.id);
             console.log(user)
             if (!user) {
@@ -126,6 +129,10 @@ export class UserController{
             req.user = user;
             next();
           } catch (error:any) {
+
+             if (!refreshToken[1]) {
+            return res.status(401).send('Access Denied. No refresh token provided.');
+            }
             if (error.name === 'JsonWebTokenError') {
               return res.json({ success: false, message: 'unauthorized access!' });
             }
@@ -135,8 +142,19 @@ export class UserController{
                 message: 'sesson expired try sign in!',
               });
             } 
+            try {
+                const decoded:any = jwt.verify(refreshToken[1], privateKey);
+                const accessToken = jwt.sign({ user: decoded.user }, privateKey, { expiresIn: '1h' });
+
+                res.cookie('refreshToken', refreshToken[1], { httpOnly: true, sameSite: 'strict' })
+                    .header('Authorization', accessToken)
+                    .send(decoded.user);
+            } catch (error) {
+                return res.status(400).send('Invalid Token.');
+            }
             res.json({ success: false, message: 'Internal server error!' });
-          }    */
+          }   
+          res.json({ success: false, message: 'Internal server error!' });
         } else {
           res.json({ success: false, message: 'unauthorized access!' });
         }
@@ -158,6 +176,9 @@ export class UserController{
            await this.userUseCase.updateToken(false,_id,newTokens);
 
           res.json({ success: true, message:'Sign out successfully!'});
+        }else{
+            res.json({ success: false, message: 'Authorization fail!' });
+
         }
       };
 }
