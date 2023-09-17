@@ -1,8 +1,6 @@
-/node_modules
-**node_modules
-/dist
-**dist
-/src
-**src
+
+node_modules
+dist
+src
 jwtRS256.key
 jwtRS256.key.pub
