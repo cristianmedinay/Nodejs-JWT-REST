@@ -23,11 +23,20 @@ const userSchema = new Schema({
         type:String,
         unique:true
     },
+    roles: {
+        User: {
+            type: Number,
+            default: 2001
+        },
+        Editor: Number,
+        Admin: Number
+    },
     password: {
         type: String,
         require:true 
     },
     tokens: [{ type: Object }],
+    refreshToken: [{ type: Object }],
     
 },{
     timestamps:true

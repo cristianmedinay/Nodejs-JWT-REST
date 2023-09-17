@@ -5,6 +5,7 @@ import authRoutes from './infrastructure/router/auth.routes'
 import passport from 'passport'
 import passportMiddleware from './infrastructure/middleware/passport'
 import specialRoutes from './infrastructure/router/special.routes'
+import cookies  from 'cookie-parser';
 import 'dotenv/config'
 const app = express();
 
@@ -13,12 +14,18 @@ const app = express();
 
 
 //middlewares, leer formatos json y urlencoded
-app.use(cors());
+
+app.use(express.urlencoded({extended:false}))
+app.use(express.json())
+app.use(cookies());
+app.use(cors({
+    origin: ['http://localhost:3000','http://192.168.1.37:3000','http://127.0.0.1:3000'],
+    credentials: true
+}));
 app.use(morgan('dev'))
 
 console.log(process.env.KEYS)
-app.use(express.urlencoded({extended:false}))
-app.use(express.json())
+
 app.use(passport.initialize())
 passport.use(passportMiddleware)
 //routes

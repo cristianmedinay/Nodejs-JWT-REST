@@ -25,5 +25,6 @@ const userCtrl = new UserController(userUseCase)
 router.post('/users',userCtrl.getUser)
 router.post('/signup',userCtrl.signUp)
 router.post('/signin',userCtrl.signIn)
-router.post('/signout',userCtrl.isAuth,userCtrl.signOut);
+router.post('/signout',userCtrl.signOut);
+router.post('/refresh',userCtrl.handleRefreshToken)
 export default router;

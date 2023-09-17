@@ -28,6 +28,11 @@ export class MongoRepository implements UserRepository{
        const user = await User.find()
        return user
     }
+    async findUser(user:any): Promise<any> {
+       const u = await User.findOne(user).exec();
+       return u;
+    }
+ 
     async tokenUser(option:boolean,id:string,oldTokens:any,tokenObject?:any,newTokens?:any): Promise<any> {
 
     /* const tokenD = await User.findByIdAndUpdate(id, { tokens: newTokens });
@@ -39,10 +44,11 @@ export class MongoRepository implements UserRepository{
         });
       }else{
         console.log('first')
-        tokenD = await User.findByIdAndUpdate(id, { tokens: {tokenObject: {
+        tokenD = await User.findByIdAndUpdate(id, { tokens: {tokenObject:newTokens} });
+       /*  tokenD = await User.findByIdAndUpdate(id, { tokens: {tokenObject: {
             expiresIn: '',
             token:newTokens
-          }} });
+          }} }); */
       }
 
 

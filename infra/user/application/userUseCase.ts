@@ -30,5 +30,11 @@ export class UserUseCase  {
         const user = await this.userRepository.findUserId(id);
         return user;
     }
+    
+    public searchUser = async (tokenUser:any)=>{
+        const user = await this.userRepository.findUser(tokenUser);
+        return user;
+    }
+  
 
 }

@@ -7,6 +7,9 @@ import { UserRepository } from "../../domain/user.repository";
  */
 const MOCK_USER={name:'cristian',email:'cristian@gmail.com',uuid:'000-000'}
 export class MockRepository implements UserRepository{
+    findUser(user: any): Promise<any> {
+        throw new Error("Method not implemented.");
+    }
     findUserId(user: any): Promise<any> {
         throw new Error("Method not implemented.");
     }

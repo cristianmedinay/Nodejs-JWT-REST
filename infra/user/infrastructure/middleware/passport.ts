@@ -18,7 +18,7 @@ const opts:StrategyOptions = {
 // null = error & user de la base de datos
 export default new Strategy(opts, async (payload, done)=>{
    try {
-        const user = await User.findById(payload.id)
+        const user = await User.findOne({email:payload.email})
         if(user){
             return done(null,user)
         }
