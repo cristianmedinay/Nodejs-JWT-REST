@@ -36,7 +36,7 @@ const userSchema = new Schema({
         require:true 
     },
     tokens: [{ type: Object }],
-    refreshToken: [{ type: Object }],
+    refreshToken: [{ type: String }],
     
 },{
     timestamps:true

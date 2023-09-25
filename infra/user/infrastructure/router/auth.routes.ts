@@ -27,4 +27,5 @@ router.post('/signup',userCtrl.signUp)
 router.post('/signin',userCtrl.signIn)
 router.post('/signout',userCtrl.signOut);
 router.post('/refresh',userCtrl.handleRefreshToken)
+router.post('/prueba',userCtrl.prueba)
 export default router;

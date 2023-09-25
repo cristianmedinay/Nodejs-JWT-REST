@@ -59,7 +59,7 @@ export class UserController{
 
     //registrarse
     public signUp = async (req:Request,res:Response)=>{
-        /* console.log(req.body) */
+        console.log(req.body)
         if(!req.body.email || !req.body.password){
             return res.status(400).json({msg:'Porfavor envia tu email y contraseña'})
         }
@@ -107,7 +107,7 @@ export class UserController{
         if(!isMatch){
             return res.status(400).json({msg:'el correo o contraseña son incorrectas', status:false})
         }
-
+        const roles = Object.values(user.roles).filter(Boolean);
         const tokenObject = createToken(user);
         const newRefreshToken = refreshToken(user);
         let newRefreshTokenArray =
@@ -122,8 +122,9 @@ export class UserController{
                   console.log('attempted refresh token reuse at login!')
                   newRefreshTokenArray = [];
               }
-  
-              res.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: false });
+              user.refreshToken = user.refreshToken.filter((rt:any) => rt !== refreshToken);;
+              await user.save();
+              res.clearCookie('jwt', { httpOnly: true, sameSite: 'lax', secure: false });
         }
         let oldTokens = user.tokens || [];
            if (oldTokens.length) {
@@ -135,17 +136,22 @@ export class UserController{
                }
              });
            } 
-        await this.userUseCase.updateToken(true,user._id,oldTokens,tokenObject);
+       /*  await this.userUseCase.updateToken(true,user._id,oldTokens,tokenObject); */
         
         user.refreshToken = [...newRefreshTokenArray, newRefreshToken];
         const result = await user.save();
        /*  console.log(result); */
 
         res.cookie('jwt', newRefreshToken, { httpOnly: true, sameSite: 'lax',secure: false, maxAge: 24 * 60 * 60 * 1000  })
-        res.status(200).json({token:tokenObject,status:true,user:newUser})
+        res.status(200).json({token:tokenObject,status:true,user:newUser,roles})
     } 
 
+    public prueba = async (req:Request, res:Response) => {
+      const cookies = req.cookies;
+      console.log(cookies)
 
+      res.status(200).json({status:true})
+    }
 
     public handleRefreshToken = async (req:Request, res:Response) => {
         const cookies = req.cookies;
@@ -216,8 +222,8 @@ export class UserController{
               const result = await foundUser.save();
                 
               //GUARDAMOS EN LAS COOKIES EL REFRESH Y EN LA BBDD
-              res.cookie('jwt', newRefreshToken, { httpOnly: true, secure: false, sameSite: 'none', maxAge: 24 * 60 * 60 * 1000 });
-                
+              res.cookie('jwt', newRefreshToken, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 24 * 60 * 60 * 1000 });
+              console.log(newRefreshToken)
               //devolvemos token
               res.json({ token:accessToken,status:true,roles})
           }
@@ -296,7 +302,7 @@ export class UserController{
           //verificamos el refresh token
           const foundUser = await this.userUseCase.searchUser({ refreshToken:refreshToken });
           if (!foundUser) {
-            res.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: false });
+            res.clearCookie('jwt', { httpOnly: true, sameSite: 'lax', secure: false });
             return res.sendStatus(204);
           }
         
@@ -317,7 +323,7 @@ export class UserController{
           await foundUser.save();
 
           //borramos cookies
-          res.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: false });
+          res.clearCookie('jwt', { httpOnly: true, sameSite: 'lax', secure: false });
           res.json({ success: true, message:'Sign out successfully!'}); 
           console.log(cookies)
        /*  }else{
