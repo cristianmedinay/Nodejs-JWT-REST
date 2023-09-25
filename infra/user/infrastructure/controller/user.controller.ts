@@ -288,7 +288,7 @@ export class UserController{
           res.json({ success: false, message: 'unauthorized access!' });
         }
     }
-    
+    //
     public signOut = async (req:Request, res:Response) => {
        /*  if (req.headers && req.headers.authorization) { */
           //verificamos cookies
